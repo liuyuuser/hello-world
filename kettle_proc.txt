@@ -1,0 +1,94 @@
+kettle proc：
+cnsz01vl00509 10.62.13.3
+
+--见用户
+useradd kettle
+passwd kettle/kettle
+
+--JDK&驱动
+java version "1.6.0_17"
+export JAVA_HOME=/app/jdk1.8.0_161
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$JAVA_HOME/bin:$PATH:$HOME/.local/bin:$HOME/bin
+
+--启动sppon.sh报错
+问题1：08:54:23,343 ERROR [Cache] Unable to set localhost. This prevents creation of a GUID. Cause was: cnsz01vl00509.cmrh.com: cnsz01vl00509.cmrh.com: Name or service not known
+java.net.UnknownHostException: cnsz01vl00509.cmrh.com: cnsz01vl00509.cmrh.com: Name or service not known
+方法：
+cat /etc/hosts
+127.0.0.1   cnsz01vl00509.cmrh.com
+
+问题2：2018/03/14 08:54:28 - org.pentaho.di.ui.util.EnvironmentUtils@31464a43 - Caused by: java.io.IOException: error=2, No such file or directory
+方法：yum -y install redhat-lsb
+
+(vnc  --用xmanger）
+打开终端使用yum命令安装vnc sever。
+命令：yum install tigervnc-server -y
+将vncserver设置为随系统启动。
+命令：chkconfig vncserver on
+# Clean any existing files in /tmp/.X11-unix environment
+启动该服务用来启用vnc的1号窗口；
+systemctl start vncserver@:1.service  或者 vncserver :1
+关闭1号窗口：
+systemctl stop vncserver@:1.service   或者 vncserver -kill :1
+设置为开机自动启动；
+systemctl enable vncserver@:1.service
+windows:
+C:\Program Files\Java\jdk1.8.0_161\)
+链接配置：
+ip:10.62.13.24
+sid:oratest
+port:1634
+user:kettledata
+
+资料库：
+oratest=(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = 10.62.13.24)(PORT = 1634)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = oratest)))
+用户：kettledata
+--转换&job测试
+
+源端：sdata/Sdata$12
+create table t_source ( id int, name varchar(100),gender int,age int);
+insert into t_source values (1,'StephenG',2, 9);
+insert into t_source values (2,'Baiwp',1, 7);
+insert into t_source values (3,'Qiaowj',1 ,8);
+insert into t_source values (4,'Guoky',2 ,10);
+insert into t_source values (5,'Qiaowj',1 ,8);
+insert into t_source values (6,'Qiaowj',1 ,8);
+insert into sdata.t_source values (7,'Qiaowj',1 ,7);
+目标端：ddata/Ddata$12
+create table ddata.t_target ( id int, name varchar(100),gender int,age int );
+
+--linux命令行运行transfromations
+run_trans.sh
+/app/data-integration/pan.sh  /rep:"rep_db" /trans:"test1" /dir:/ /user:admin /pass:admin /level:Basic>/app/project/run_test1.log
+--linux命令行运行job
+cat run_job1.sh 
+/app/data-integration/kitchen.sh  /rep:"rep_db" /job:"job1" /dir:/ /user:admin /pass:admin /level:Basic>>/app/project/run_job1.log
+
+
+--多张表全量抽取测试
+测试表
+create table sdata.t1(id int,name varchar2(30));
+create table sdata.t2(id int,name varchar2(30));
+create table sdata.t3(id int,name varchar2(30));
+create table sdata.t4(id int,name varchar2(30));
+insert into sdata.t1 values(1,'1a');
+insert into sdata.t1 values(2,'1a');
+insert into sdata.t2 values(1,'2a');
+insert into sdata.t3 values(1,'3a');
+insert into sdata.t4 values(1,'3a');
+
+create table ddata.t1(id int,name varchar2(30));
+create table ddata.t2(id int,name varchar2(30));
+create table ddata.t3(id int,name varchar2(30));
+create table ddata.t4(id int,name varchar2(30));
+报错：
+2018/03/16 09:08:22 - org.pentaho.di.trans.steps.tableoutput.TableOutputMeta@50ab56e2 - ERROR (version 7.1.0.0-12, build 1 from 2017-05-16 17.18.02 by buildguy) : Unable to get fields from previous steps because of an error
+1、快速循环全量同步多张表
+2、基于变量的的全量同步多张表（待测试）
+
+
+同步效率测试：（待测试）
+1、大批量 
+2、大字段
+3、级联表、父子表
